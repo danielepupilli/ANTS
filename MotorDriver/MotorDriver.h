@@ -25,6 +25,7 @@ class MotorDriver
     void turn(int direction, float turnSpeed);
     void turnAngle(int direction, float turnSpeed,int angle);
     void operationCheck(Settings sett);
+    void readPosition(QueueHandle_t xQueueP);
     void readSettings(QueueHandle_t xQueueP);
     void init();
     bool isBraked();
@@ -34,7 +35,6 @@ class MotorDriver
     void setMove(float fMaxS, float fSpeedS, float sMaxS, float sSpeedS);
     char getOperation();
     void accAhead();
-    Settings getSettings();
     AccelStepper getStepper(int stepperID);
 
 

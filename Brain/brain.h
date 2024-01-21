@@ -14,9 +14,10 @@ class brain
   public:
   Settings chose();
   void sendSettings(QueueHandle_t xQueueSettings,Settings settings);
+  void sendPosition(Position pos,QueueHandle_t xQueuePosition);
+  void readPosition(QueueHandle_t xQueuePosition);
   void start();
   void setupTimer();
-  int readPosition(QueueHandle_t xQueueP);
   
   private:
 

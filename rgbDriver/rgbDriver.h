@@ -20,19 +20,24 @@ class rgbDriver
 {
     public:
     void rgbRead();
-    QueueHandle_t getQueue();
     void checkSensor();
-    void sendPosition(int  color, QueueHandle_t queue);
-    int readPosition();
-    int getColorFlag(Position p);
+    void sendPosition(Position pos, QueueHandle_t queue);
     Adafruit_TCS34725 setupSensor();
     private:
     void setupTimer();
     static void globalTimerCallback(TimerHandle_t xTimer);
     float from0_255To0_1(float value);
+    HSV RGBToHSV(float red, float green, float blue);
+    float getAnalyticX(float H);
+    float getAnalyticY(float S);
+    float getRealX(float H);
+    float getRealY(float S, float H);   
+    Position getPosition(float H, float S);
     bool newColorDetected();
     float calculateValue(float red, float green, float blue);
     float calculateMinimum(float red, float green, float blue);
-   
+    float calculateChroma(float V, float m);
+    float calculateHue(float R, float G, float B, float V, float C);
+    float calculateSaturation(float C, float V);
 };
 #endif

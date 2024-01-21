@@ -1,11 +1,29 @@
 #include "brain.h"
 
 int antNumber = 1;
+Position antPos[10];
 TimerHandle_t xGlobalTimer;
 Settings s;
 bool timerExpired = false;
+bool isNewPos = false;
 bool isNewSet = false;
+//send position into queue
+void brain::sendPosition(Position pos, QueueHandle_t xQueuePosition)
+{
+    BaseType_t xStatus;
+    const TickType_t = pdMS_TO_TICKS(700);
+    xStatus= xQueueSend(xQueuePosition, &pos,0);
+    if(xStatus == pdPASS)
+     {
+         // Serial.println("new Settings sent!\n");
+     }
+     else
+     {
+        //Serial.println("ERROR! Impossible to send Position\n");
+     }
+    isNewPos == false; 
 
+}
 //TODO implementare operazioni logiche
 void start()
 {
@@ -30,36 +48,7 @@ void globalTimerCallback(TimerHandle_t xTimer)
     //Serial.println("Global Timer Expired\n");
     timerExpired = true;
 
-
 }
-
-int brain::readPosition(QueueHandle_t xQueueP)
-
-{
-    BaseType_t xStatus;
-  
-    int  xReceivedColor;
-
-    if(uxQueueMessagesWaiting!=0)    
-    {
-    xStatus = xQueueReceive(xQueueP, &xReceivedColor,readingInterval);
-    if(xStatus == pdPASS)
-    {
-      
-      return xReceivedColor;
-      vTaskDelay(1); 
-    }else
-    {
-      vTaskDelay(1); 
-      return 0;
-    }
-    
-    }
-    vTaskDelay(1); 
-    return 0;
-    
-}
-
 
 //set random instruction
 Settings brain ::chose()
@@ -104,5 +93,46 @@ void brain::setupTimer()
 
 }
 
+//read and store new positions
+void brain::readPosition(QueueHandle_t xQueueP)
+{
+
+  BaseType_t xStatus;
+  const TickType_t xTicksToWait = pdMS_TO_TICKS(700);
+  Position xReceivedPosition;
+  while (1) 
+  {
+    xStatus = xQueueReceive(xQueueP, &xReceivedPosition, xTicksToWait);
+    if (xStatus == pdPASS) 
+    {
+      
+        isNewPos == true;
+        bool hasPos = false;
+          
+        for(int i=0; i< 10;i++)
+        {
+                if(antPos[i].id == xReceivedPosition.id )
+                {
+                    if(cmp(antPos[i].Y,xReceivedPosition.Y)==false || cmp(antPos[i].X,xReceivedPosition.X)==true)
+                    {
+                        antPos[i].X == xReceivedPosition.X;
+                        antPos[i].Y == xReceivedPosition.Y;
+                    }
+                    hasPos == true;
+                } 
+        }
+        if(hasPos == false)
+        {
+            antPos[antNumber + 1] = xReceivedPosition;
+            antNumber++;
+        }
+
+        else 
+        {
+           // Serial.println("Queue is empty!"); 
+        }
+    }
+  }
+}
 
 

@@ -28,11 +28,6 @@ char MotorDriver::getOperation()
 {
  return currentSettings.operation;
 }
-
-Settings MotorDriver::getSettings()
-{
- return currentSettings;
-}
 // return motor handler, used for testing
 AccelStepper MotorDriver::getStepper(int id)
 {
@@ -161,13 +156,13 @@ void MotorDriver::operationCheck(Settings sett)
       turnAngle(1,100,90);
       break;
       case 'j':
-      turnAngle(1,100,45);
+      turn(1,100,45);
       break;
       case 'k':
-      turnAngle(0,100,45);
+      turn(0,100,45);
       break;
       case 'r':
-      turnAngle(0,100,90);
+      turn(0,100,90);
       break;
     default:
       break;
@@ -194,6 +189,7 @@ void MotorDriver::ahead()
    
     setMove(currentSettings.maxS,currentSettings.speedS,currentSettings.maxS,currentSettings.speedS);
     brake = false;
+    motorRun();
 
 }
 bool MotorDriver::isBraked()
@@ -230,43 +226,24 @@ void MotorDriver :: turn(int direction,float turnSpeed)
 
 void MotorDriver :: turnAngle(int direction,float turnSpeed,int angle)
 {
-   brake = true;
-   
+    int steps = (angle*200)/360;
+   turnSpeed = turnSpeed + currentSettings.speedS;
     if (direction == 0)
     {
-      
-        if(firstStepper.currentPosition() < 300)
-      {
-          setMove(300,300 ,0,0);
-         firstStepper.run();
-      }
-        else
-        {
-          brake = false;
-          setMove(currentSettings.maxS,currentSettings.speedS,currentSettings.maxS,currentSettings.speedS);
-          motorRun();
-        }
-      
-     
+      firstStepper.move(steps);
+      secondStepper.moveTo(0);
+      setMove(currentSettings.maxS, currentSettings.speedS,currentSettings.maxS,turnSpeed );
+      motorRun();
+      return;
     }
     if (direction == 1)
     {
-    if(secondStepper.currentPosition() < 300)
-      {
-          setMove(0,0,currentSettings.maxS, currentSettings.speedS);
-         secondStepper.run();
-      }
-        else
-        {
-            brake = false;
-           setMove(currentSettings.maxS,currentSettings.speedS,currentSettings.maxS,currentSettings.speedS);
-          motorRun();
-        }
+      firstStepper.move(0);
+      secondStepper.move(steps);
+        setMove(currentSettings.maxS, turnSpeed,currentSettings.maxS,currentSettings.speedS);
+        motorRun();
+        return;
     }
-
-   
-
-
 }
 //method to avoid collision, ants will turn right
 void MotorDriver::avoid()
@@ -314,4 +291,25 @@ void MotorDriver::readSettings(QueueHandle_t xQueueP)
   }
 }
 
+// read current position from queue
+void MotorDriver::readPosition(QueueHandle_t xQueueP)
+{
 
+  BaseType_t xStatus;
+  const TickType_t xTicksToWait = pdMS_TO_TICKS(700);
+  Position xReceivedPosition;
+  while (1) {
+    xStatus = xQueueReceive(xQueueP, &xReceivedPosition, xTicksToWait);
+    if (xStatus == pdPASS) {
+      
+      if(cmpPosition(xReceivedPosition, currentPosition) == false)
+      {
+        currentPosition = xReceivedPosition;
+      }
+     
+    }
+    else {
+      Serial.println("Queue is empty!");
+    }
+  }
+}
